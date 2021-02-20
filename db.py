@@ -1,4 +1,4 @@
-import test.test_base64
+import base64
 import boto3
 import datetime
 from flask_sqlalchemy import SQLAlchemy

@@ -28,8 +28,7 @@ def failure_response(message, code=404):
 
 @app.route("/api/cats/")
 def get_cats():
-    # return success_response([c.serialize() for c in Course.query.all()])
-    return success_response("hi")
+    return success_response([e.serialize() for e in Entry.query.all()])
 
 
 @app.route("/api/upload/", methods=["POST"])
@@ -40,30 +39,11 @@ def upload():
     base64 = body.get("base64")
     if base64 is None:
         return json.dumps({"error": "No base64 URL to be found!"})
-    entry = Entry(longitude=longitude, latitude=latitude, base64=base64)
+    entry = Entry(longitude=longitude, latitude=latitude, base64_str=base64)
     db.session.add(entry)
     db.session.commit()
     return success_response(entry.serialize(), 201)
 
-    # code = body.get("code")
-    # name = body.get("name")
-    # if not code or not name:
-    #     return failure_response(
-    #         "You must supply the code and name to create a course."
-    #     )
-    # new_course = Course(code=code, name=name)
-    # db.session.add(new_course)
-    # db.session.commit()
-    # return success_response(new_course.serialize())
-    return success_response("hi")
-
-
-# @app.route("/api/courses/<int:course_id>/")
-# def get_specific_course(course_id):
-#     course = Course.query.filter_by(id=course_id).first()
-#     if course is None:
-#         return failure_response("Course not found!")
-#     return success_response(course.serialize())
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
