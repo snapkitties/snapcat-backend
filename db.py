@@ -15,7 +15,21 @@ db = SQLAlchemy()
 EXTENSIONS = ["png", "gif", "jpg", "jpeg"]
 BASE_DIR = os.getcwd()
 S3_BUCKET = "snapkitties"
-S3_BASE_URL = f"https://{S3_BUCKET}.s3-us-east-1.amazonaws.com"
+S3_BASE_URL = f"https://{S3_BUCKET}.s3.amazonaws.com"
+
+
+class Cat(db.Model):
+    __tablename__ = "cat"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=True)
+    entries = db.relationship("Entry", cascade="delete")
+
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name")
+        self.entries = []
+
+    def serialize(self):
+        return {"id": self.id, "entries": [entry.serialize() for entry in self.entries]}
 
 
 class Entry(db.Model):
@@ -25,14 +39,17 @@ class Entry(db.Model):
     latitude = db.Column(db.String, nullable=False)
     s3_url = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False)
+    cat = db.Column(db.Integer, db.ForeignKey("cat.id"), nullable=True)
 
     def __init__(self, **kwargs):
         self.create(kwargs.get("base64_str"))
         self.longitude = kwargs.get("longitude")
         self.latitude = kwargs.get("latitude")
+        self.cat = kwargs.get("cat_id", -1)
 
     def serialize(self):
         return {
+            "id": self.id,
             "longitude": self.longitude,
             "latitude": self.latitude,
             "s3_url": self.s3_url,
