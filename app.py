@@ -6,6 +6,8 @@ from db import db
 from flask import Flask, Response
 from flask import request
 from email_sender import send_email
+import random
+
 
 from flask_cors import CORS
 
@@ -15,7 +17,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 db_filename = "cats.db"
-counter = 1
+
 
 # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///%s" % db_filename
 # app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -55,8 +57,8 @@ def hello_world():
     return success_response("This works!")
 
 
-@app.route("/api/cats/")
-def get_cats():
+@app.route("/api/entries/")
+def get_entries():
     return success_response([e.serialize() for e in Entry.query.all()])
 
 
@@ -73,9 +75,31 @@ def get_profile(profile_id):
     return success_response(cat.serialize())
 
 
+@app.route("/api/profiles/<int:profile_id>/", methods=["DELETE"])
+def delete_profile(profile_id):
+    cat = Cat.query.filter_by(id=profile_id).first()
+    db.session.delete(cat)
+    db.session.commit()
+    return success_response("Deleted!")
+
+
+@app.route("/api/entries/<int:entry_id>/", methods=["DELETE"])
+def delete_entry(entry_id):
+    entry = Entry.query.filter_by(id=entry_id).first()
+    db.session.delete(entry)
+    db.session.commit()
+    return success_response("Deleted!")
+
+
+def get_rand_name():
+    lines = open("names.txt").readlines()
+    index = random.randrange(4946)
+    line = lines[index]
+    return line
+
+
 @app.route("/api/upload/", methods=["POST"])
 def upload():
-    global counter
     body = json.loads(request.data)
     longitude = body.get("longitude")
     latitude = body.get("latitude")
@@ -83,22 +107,21 @@ def upload():
     email = body.get("email")
     if base64 is None:
         return json.dumps({"error": "No base64 URL to be found!"})
-    cat = Cat(name=f"cat{str(counter)}")
+    cat = Cat(name=f"Cat {get_rand_name()}")
     db.session.add(cat)
     db.session.commit()
-    counter += 1
     entry = Entry(
         longitude=longitude, latitude=latitude, base64_str=base64, cat_id=cat.id
     )
     db.session.add(entry)
     db.session.commit()
     send_email(
-        email=email or "asz33@cornell.edu",
+        email=email
+        or "asz33@cornell.edu,ad665@cornell.edu,slh268@cornell.edu,kta28@cornell.edu,ps789@cornell.edu",
         subject=f"{cat.name} has been spotted!",
         body=f"Here's the pic of the cat!",
         s3_url=entry.s3_url,
     )
-    print("email", email)
     return success_response(entry.serialize(), 201)
 
 

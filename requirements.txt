@@ -37,3 +37,4 @@ Flask==1.0.2
 Flask-Cors==3.0.10
 Flask-Migrate==2.6.0
 Flask-Script==2.0.6
+Random-Word-Generator==1.3
